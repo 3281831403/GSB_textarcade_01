@@ -1,0 +1,28 @@
+name: Documentation
+description: Something in the docs is missing, wrong, or confusing.
+title: "[Docs] "
+labels: ["documentation", "hacktoberfest", "difficulty: beginner"]
+body:
+  - type: input
+    id: where
+    attributes:
+      label: Which file or page?
+      placeholder: README.md, docs/how-to-add-a-game.md
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: What should it say instead?
+  - type: markdown
+    attributes:
+      value: |
+        > **Note:** fixing typos, whitespace, or commas alone is treated as spam
+        > under our Hacktoberfest quality policy. Docs PRs must add or correct
+        > actual information.

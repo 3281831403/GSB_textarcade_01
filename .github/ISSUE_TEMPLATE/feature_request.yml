@@ -1,0 +1,32 @@
+name: Feature request
+description: Suggest something new.
+title: "[Feature] "
+labels: ["enhancement", "hacktoberfest"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you build?
+    validations:
+      required: true
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: How hard do you think this is?
+      options:
+        - Beginner
+        - Intermediate
+        - Advanced
+        - Not sure
+  - type: checkboxes
+    id: willing
+    attributes:
+      label: Would you like to work on it?
+      options:
+        - label: Yes, assign it to me

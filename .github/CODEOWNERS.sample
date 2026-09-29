@@ -1,0 +1,23 @@
+# CODEOWNERS — rename to CODEOWNERS (no .sample) to activate.
+#
+# Listed people are requested for review automatically when matching files
+# change. This is how you guarantee the 48-hour SLA actually has an owner
+# instead of "someone will look at it".
+#
+# Handles must be org members with write access, or the rule is silently ignored.
+
+# Everything, as a fallback
+*                       @FILL-domain-lead
+
+# Anything that touches CI or contribution policy stays with OS & DevX
+/.github/               @FILL-osdevx-lead
+/CONTRIBUTING.md        @FILL-osdevx-lead
+/CODE_OF_CONDUCT.md     @FILL-osdevx-lead
+
+# Security-relevant files get a second pair of eyes
+/SECURITY.md            @FILL-digital-defence-lead
+/.gitleaks.toml         @FILL-digital-defence-lead
+
+# Docs
+/docs/                  @FILL-editorial-lead
+/README.md              @FILL-editorial-lead

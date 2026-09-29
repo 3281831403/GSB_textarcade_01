@@ -1,0 +1,33 @@
+# Deliberately gentle. This repo exists for people making their first ever pull
+# request; a linter that fails on forty nitpicks teaches them that CI is an
+# enemy to be worked around.
+line-length = 100
+target-version = "py310"
+
+# Recent ruff versions also format Python code blocks inside Markdown. For a
+# repo where people make their first PR, a formatter failure on a docs file is
+# baffling rather than helpful, so docs are left alone.
+extend-exclude = ["*.md"]
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes — real bugs: unused imports, undefined names
+    "I",   # import sorting
+    "UP",  # pyupgrade — modern syntax
+    "B",   # bugbear — likely mistakes
+]
+ignore = [
+    "E501",  # line too long — the formatter deals with this
+    "W291",  # trailing whitespace — matters in the ASCII art
+    "W293",
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["F401", "F811"]      # pytest fixtures legitimately look unused
+"__init__.py" = ["F401"]           # re-exports
+"arcade/art.py" = ["E501", "W291", "W293"]   # ASCII art is whitespace-sensitive
+
+[format]
+quote-style = "double"
+indent-style = "space"
