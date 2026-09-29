@@ -86,6 +86,35 @@ def is_full(board: list[str]) -> bool:
     return EMPTY not in board
 
 
+def outcome_message(board: list[str]) -> str:
+    """Return the end-of-game message for a board.
+
+    Args:
+        board: Nine squares, each "X", "O", or a space.
+
+    Returns:
+        A player-facing sentence: who won, or that it is a draw.
+
+    Raises:
+        ValueError: If the board does not have exactly nine squares or
+            holds a mark other than "X", "O", or a space.
+    """
+    if len(board) != 9:
+        raise ValueError(f"board must have 9 squares, got {len(board)}")
+    invalid = sorted({cell for cell in board if cell not in (EMPTY, PLAYER, COMPUTER)})
+    if invalid:
+        raise ValueError(f"board contains invalid marks: {invalid}")
+
+    result = winner(board)
+    if result == PLAYER:
+        return "You win!"
+    if result == COMPUTER:
+        return "The computer wins!"
+    if is_full(board):
+        return "It's a draw!"
+    return "The game is still on."
+
+
 def computer_move(board: list[str]) -> int:
     """Choose a square for the computer.
 
@@ -133,7 +162,7 @@ def play() -> int:
         result = winner(board)
 
     print(render(board))
-    print(f"  {result} wins!\n")
+    print(f"  {outcome_message(board)}\n")
 
     if result == PLAYER:
         return 100
