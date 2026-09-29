@@ -24,7 +24,7 @@ GAMES: list[ModuleType] = [
 
 def show_menu() -> None:
     """Print the list of games and the extra options."""
-    print(art.ARCADE_BANNER)
+    print(art.fit_banner(art.ARCADE_BANNER, "TERMINAL ARCADE"))
     print(art.dim(f"  v{__version__}  ·  github-community-gitam\n"))
 
     for number, game in enumerate(GAMES, start=1):

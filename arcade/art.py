@@ -10,6 +10,7 @@ it does not wrap on a small terminal.
 from __future__ import annotations
 
 import os
+import shutil
 import sys
 
 # --- Colours -----------------------------------------------------------------
@@ -69,6 +70,42 @@ def bold(text: str) -> str:
 
 def dim(text: str) -> str:
     return colour(text, DIM)
+
+
+# --- Terminal size -----------------------------------------------------------
+
+#: Width to assume when the real terminal size cannot be discovered (for
+#: example when output is piped to a file and COLUMNS is not set).
+DEFAULT_WIDTH = 80
+
+
+def terminal_width(default: int = DEFAULT_WIDTH) -> int:
+    """Return the current terminal width in columns.
+
+    This never raises: if there is no real terminal (output is piped, the
+    COLUMNS variable is missing or garbage, or the OS call fails) the
+    `default` width is used instead. The size is looked up on every call, so
+    resizing the terminal mid-game is picked up immediately.
+
+    Args:
+        default: Width to fall back on when the real size is unknown.
+
+    Returns:
+        A positive number of columns.
+    """
+    try:
+        fallback = (max(1, int(default)), 24)
+    except (TypeError, ValueError):
+        fallback = (DEFAULT_WIDTH, 24)
+    try:
+        columns = shutil.get_terminal_size(fallback=fallback).columns
+    except Exception:
+        columns = fallback[0]
+    try:
+        columns = int(columns)
+    except (TypeError, ValueError):
+        columns = fallback[0]
+    return max(1, columns)
 
 
 # --- Banners -----------------------------------------------------------------
@@ -186,6 +223,43 @@ def banner(text: str) -> str:
     return f"{top}\n{middle}\n{top}"
 
 
-def rule(char: str = "-", width: int = 50) -> str:
-    """A horizontal divider line."""
-    return char * width
+def fit_banner(artwork: str, title: str, width: int | None = None) -> str:
+    """Fit ASCII art to the terminal, degrading to plain text when narrow.
+
+    If the art fits inside the current width it is centred as a block. If the
+    terminal is too narrow — where the art would wrap into unreadable noise —
+    a plain text title is returned instead.
+
+    Args:
+        artwork: The ASCII art, usually one of the *_BANNER constants.
+        title: Plain text to fall back to when the art does not fit.
+        width: Columns available. None means the real terminal width.
+
+    Returns:
+        The centred art, or the plain title when space is tight.
+    """
+    if width is None:
+        width = terminal_width()
+    width = max(1, int(width))
+
+    lines = artwork.strip("\n").splitlines()
+    art_width = max((len(line) for line in lines), default=0)
+    if 0 < art_width <= width:
+        pad = " " * ((width - art_width) // 2)
+        return "\n".join(pad + line for line in lines)
+
+    if len(title) >= width:
+        return title
+    return title.center(width)
+
+
+def rule(char: str = "-", width: int | None = None) -> str:
+    """A horizontal divider line, as wide as the terminal by default.
+
+    Args:
+        char: The character to draw the line with.
+        width: How long the line is. None means the current terminal width.
+    """
+    if width is None:
+        width = terminal_width()
+    return char * max(0, int(width))

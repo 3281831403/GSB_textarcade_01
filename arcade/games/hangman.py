@@ -78,7 +78,7 @@ def play() -> int:
     Returns:
         The player's score for this round.
     """
-    print(art.HANGMAN_BANNER)
+    print(art.fit_banner(art.HANGMAN_BANNER, "HANGMAN"))
 
     word = random.choice(WORDS)
     guessed: set[str] = set()

@@ -56,7 +56,7 @@ def play() -> int:
     Returns:
         The player's score for this round.
     """
-    print(art.GUESS_BANNER)
+    print(art.fit_banner(art.GUESS_BANNER, "GUESS THE NUMBER"))
     print(f"  I am thinking of a number between {LOWEST} and {HIGHEST}.")
     print(f"  You have {MAX_GUESSES} guesses.\n")
 

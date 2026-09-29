@@ -53,7 +53,7 @@ def play() -> int:
     Returns:
         The player's score: 20 points per round won.
     """
-    print(art.RPS_BANNER)
+    print(art.fit_banner(art.RPS_BANNER, "ROCK PAPER SCISSORS"))
     print(f"  First to win the most of {ROUNDS} rounds.\n")
 
     player_wins = 0

@@ -7,11 +7,20 @@ closing the terminal. The file is created the first time a score is saved.
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from arcade import art
+
 SCORES_PATH = Path.home() / ".terminal-arcade" / "scores.json"
+
+# Widths at which the scoreboard table drops columns. Below FULL_WIDTH the
+# date column goes; below GAME_WIDTH the game column goes too, leaving just
+# the rank, player, and score so nothing wraps on a narrow terminal.
+FULL_WIDTH = 60
+GAME_WIDTH = 44
 
 
 def _ensure_file() -> None:
@@ -77,8 +86,20 @@ def save_score(
 
     scores = load_scores(target)
     scores.append(entry)
-    target.write_text(json.dumps(scores, indent=2), encoding="utf-8")
+    _write_atomic(target, scores)
     return entry
+
+
+def _write_atomic(target: Path, scores: list[dict[str, Any]]) -> None:
+    """Write scores to disk all at once, or not at all.
+
+    The JSON goes to a temporary file in the same folder first and is then
+    moved over the real file, so a failure halfway through can never leave a
+    half-written scoreboard behind.
+    """
+    temp = target.with_name(target.name + ".tmp")
+    temp.write_text(json.dumps(scores, indent=2), encoding="utf-8")
+    os.replace(temp, target)
 
 
 def top_scores(
@@ -107,26 +128,59 @@ def top_scores(
     return ranked[:limit]
 
 
-def format_scoreboard(entries: list[dict[str, Any]]) -> str:
+def format_scoreboard(entries: list[dict[str, Any]], width: int | None = None) -> str:
     """Render score entries as a plain text table.
+
+    The table adapts to the terminal: on a wide screen every column is shown,
+    on a narrower one the date and then the game column are dropped so the
+    rows never wrap and slip out of alignment.
 
     Args:
         entries: Score entries, already in the order you want them shown.
+        width: Columns available. None means the real terminal width.
 
     Returns:
         A multi-line string ready to print.
     """
+    if width is None:
+        width = art.terminal_width()
+    width = max(1, int(width))
+
     if not entries:
         return "  No scores yet. Be the first."
 
+    if width >= FULL_WIDTH:
+        lines = [
+            "  #  Player          Game            Score  Date",
+            "  -  --------------  --------------  -----  ----------------",
+        ]
+        for i, entry in enumerate(entries, start=1):
+            player = str(entry.get("player", "?"))[:14]
+            game = str(entry.get("game", "?"))[:14]
+            score = entry.get("score", 0)
+            date = entry.get("date", "")
+            lines.append(f"  {i}  {player:<14}  {game:<14}  {score:>5}  {date}")
+        return "\n".join(lines)
+
+    if width >= GAME_WIDTH:
+        lines = [
+            "  #  Player          Game            Score",
+            "  -  --------------  --------------  -----",
+        ]
+        for i, entry in enumerate(entries, start=1):
+            player = str(entry.get("player", "?"))[:14]
+            game = str(entry.get("game", "?"))[:14]
+            score = entry.get("score", 0)
+            lines.append(f"  {i}  {player:<14}  {game:<14}  {score:>5}")
+        return "\n".join(lines)
+
+    player_width = max(4, width - 12)
     lines = [
-        "  #  Player          Game            Score  Date",
-        "  -  --------------  --------------  -----  ----------------",
+        f"  #  {'Player'[:player_width]:<{player_width}}  Score",
+        f"  -  {'-' * player_width}  -----",
     ]
     for i, entry in enumerate(entries, start=1):
-        player = str(entry.get("player", "?"))[:14]
-        game = str(entry.get("game", "?"))[:14]
+        player = str(entry.get("player", "?"))[:player_width]
         score = entry.get("score", 0)
-        date = entry.get("date", "")
-        lines.append(f"  {i}  {player:<14}  {game:<14}  {score:>5}  {date}")
+        lines.append(f"  {i}  {player:<{player_width}}  {score:>5}")
     return "\n".join(lines)
