@@ -57,6 +57,43 @@ def is_solved(word: str, guessed: set[str]) -> bool:
     return all(letter in guessed for letter in word)
 
 
+def apply_guess(word: str, guessed: set[str], letter: str) -> tuple[set[str], str]:
+    """Apply one guessed letter to the game state.
+
+    Matching ignores capital letters, so "A" and "a" are the same guess.
+    Guessing a letter that was already tried is a "repeat" and costs no
+    life; only a brand-new wrong letter is a "miss".
+
+    Args:
+        word: The secret word, letters only.
+        guessed: Letters the player has already tried. Never mutated —
+            the updated set is returned instead, so a rejected guess
+            leaves the caller's state exactly as it was.
+        letter: The letter the player just typed.
+
+    Returns:
+        An (updated_guessed, outcome) pair, where outcome is one of
+        "hit", "miss", or "repeat". On "repeat" the updated set holds
+        the same letters as `guessed`.
+
+    Raises:
+        ValueError: If `word` is not a non-empty string of letters, or
+            `letter` is not exactly one alphabetic character.
+    """
+    if not isinstance(word, str) or not word or not word.isalpha():
+        raise ValueError(f"word must be a non-empty string of letters, got {word!r}")
+    if not isinstance(letter, str) or len(letter) != 1 or not letter.isalpha():
+        raise ValueError(f"letter must be exactly one alphabetic character, got {letter!r}")
+
+    normalized = letter.lower()
+    if normalized in guessed:
+        return set(guessed), "repeat"
+
+    updated = set(guessed)
+    updated.add(normalized)
+    return updated, "hit" if normalized in word else "miss"
+
+
 def score_for(word: str, wrong: int) -> int:
     """Score a completed game.
 
@@ -72,15 +109,20 @@ def score_for(word: str, wrong: int) -> int:
     return max(0, len(word) * 10 - wrong * 10)
 
 
-def play() -> int:
+def play(rng: random.Random | None = None) -> int:
     """Run one round of Hangman.
+
+    Args:
+        rng: Optional random source for picking the word. Pass
+            random.Random(seed) for a deterministic pick; by default the
+            module-level randomness is used so real games vary.
 
     Returns:
         The player's score for this round.
     """
     print(art.HANGMAN_BANNER)
 
-    word = random.choice(WORDS)
+    word = (rng if rng is not None else random).choice(WORDS)
     guessed: set[str] = set()
     wrong = 0
 
@@ -94,11 +136,13 @@ def play() -> int:
 
         letter = ask_letter("  Guess a letter:")
 
-        if letter in word:
-            guessed.add(letter)
+        guessed, outcome = apply_guess(word, guessed, letter)
+
+        if outcome == "repeat":
+            print(art.yellow(f"  You already tried '{letter}' — that one is free."))
+        elif outcome == "hit":
             print(art.green(f"  Yes — '{letter}' is in the word."))
         else:
-            guessed.add(letter)
             wrong += 1
             print(art.red(f"  No — '{letter}' is not in the word."))
 
